@@ -64,6 +64,12 @@ class JwksCache:
                     return key
         raise AuthenticationError("Token signing key is not trusted")
 
+    def ensure_available(self) -> None:
+        now = self._monotonic()
+        with self._lock:
+            if now >= self._expires_at:
+                self._refresh(now)
+
     def close(self) -> None:
         self._client.close()
 
