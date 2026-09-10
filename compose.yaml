@@ -1,0 +1,81 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-admin-password}
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/enterprise-realm.json:/opt/keycloak/data/import/enterprise-realm.json:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "{ printf 'HEAD /health/ready HTTP/1.0\\r\\n\\r\\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/127.0.0.1/9000",
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 12
+
+  gateway:
+    build: .
+    restart: unless-stopped
+    environment: &identity-environment
+      IDENTITY_GATEWAY_ISSUER_URL: http://localhost:8080/realms/enterprise
+      IDENTITY_GATEWAY_JWKS_URL: http://keycloak:8080/realms/enterprise/protocol/openid-connect/certs
+      IDENTITY_GATEWAY_AUDIENCE: identity-gateway
+      IDENTITY_GATEWAY_CLIENT_ID: identity-gateway
+      IDENTITY_GATEWAY_UPSTREAM_URL: http://protected-service:8001
+      IDENTITY_GATEWAY_ALLOWED_ORIGINS: '["http://localhost:3000"]'
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  protected-service:
+    build: .
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.protected_service:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001",
+      ]
+    environment: *identity-environment
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    expose:
+      - "8001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  pkce-client:
+    image: nginx:1.28.0-alpine
+    restart: unless-stopped
+    volumes:
+      - ./examples/pkce-client:/usr/share/nginx/html:ro
+    ports:
+      - "3000:80"
+    depends_on:
+      gateway:
+        condition: service_healthy

@@ -1,0 +1,269 @@
+{
+  "realm": "enterprise",
+  "enabled": true,
+  "displayName": "Enterprise Identity Lab",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "roles": {
+    "realm": [
+      {
+        "name": "platform-admin",
+        "description": "Cross-tenant platform administrator"
+      },
+      {
+        "name": "operator",
+        "description": "Runs approved operational actions"
+      },
+      {
+        "name": "auditor",
+        "description": "Reads audit evidence"
+      },
+      {
+        "name": "viewer",
+        "description": "Reads tenant resources"
+      },
+      {
+        "name": "service-executor",
+        "description": "Submits machine-to-machine jobs"
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "tenant",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenant_id",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "resources:read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "audit:read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "operations:write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "jobs:write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "identity-gateway",
+      "name": "Identity Gateway API",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "command-center",
+      "name": "Command Center PKCE Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email",
+        "tenant",
+        "resources:read"
+      ],
+      "optionalClientScopes": [
+        "audit:read",
+        "operations:write"
+      ],
+      "protocolMappers": [
+        {
+          "name": "identity-gateway-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "identity-gateway",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "automation-service",
+      "name": "Automation Service",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "local-service-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "roles",
+        "jobs:write"
+      ],
+      "protocolMappers": [
+        {
+          "name": "identity-gateway-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "identity-gateway",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "service-tenant",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "tenant_id",
+            "claim.value": "platform",
+            "jsonType.label": "String",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice.operator",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Operator",
+      "email": "alice.operator@example.test",
+      "attributes": {
+        "tenant_id": [
+          "tenant-alpha"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-alice-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "operator"
+      ]
+    },
+    {
+      "username": "bob.viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Viewer",
+      "email": "bob.viewer@example.test",
+      "attributes": {
+        "tenant_id": [
+          "tenant-beta"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-bob-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "viewer"
+      ]
+    },
+    {
+      "username": "audrey.auditor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Audrey",
+      "lastName": "Auditor",
+      "email": "audrey.auditor@example.test",
+      "attributes": {
+        "tenant_id": [
+          "tenant-alpha"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-auditor-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "auditor"
+      ]
+    },
+    {
+      "username": "service-account-automation-service",
+      "enabled": true,
+      "serviceAccountClientId": "automation-service",
+      "realmRoles": [
+        "service-executor"
+      ]
+    }
+  ]
+}

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     max_token_bytes: int = Field(default=16384, ge=1024, le=65536)
     request_timeout_seconds: float = Field(default=5, ge=0.1, le=30)
     service_client_ids: frozenset[str] = frozenset({"automation-service"})
+    allowed_origins: list[str] = ["http://localhost:3000"]
 
 
 @lru_cache

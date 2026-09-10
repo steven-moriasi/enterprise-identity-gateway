@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Identity Gateway PKCE Client</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Identity Gateway PKCE Client</h1>
+      <p>
+        This local client keeps the access token in memory and uses authorization code with PKCE.
+      </p>
+      <div class="actions">
+        <button id="login" type="button">Sign in</button>
+        <button id="profile" type="button" disabled>Load profile</button>
+        <button id="resources" type="button" disabled>Load tenant resources</button>
+      </div>
+      <pre id="output" aria-live="polite">Not signed in.</pre>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

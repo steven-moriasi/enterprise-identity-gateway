@@ -3,9 +3,11 @@ from uuid import uuid4
 
 from fastapi import FastAPI, Request
 from starlette.middleware.base import RequestResponseEndpoint
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 
 from app.api.routes import router as identity_router
+from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.operations import router as operations_router
 
@@ -16,6 +18,14 @@ configure_logging()
 app = FastAPI(
     title="Enterprise Identity Gateway",
     version="0.1.0",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_settings().allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
+    expose_headers=["X-Correlation-ID"],
 )
 app.include_router(operations_router)
 app.include_router(identity_router)

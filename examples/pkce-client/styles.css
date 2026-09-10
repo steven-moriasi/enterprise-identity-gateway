@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+main {
+  width: min(42rem, calc(100% - 2rem));
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+}
+
+button {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+}
+
+pre {
+  min-height: 10rem;
+  padding: 1rem;
+  overflow: auto;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  white-space: pre-wrap;
+}
