@@ -35,7 +35,6 @@ TENANT_RESOURCES_READ = Policy(
 )
 SERVICE_JOBS_WRITE = Policy(
     name="service.jobs.write",
-    roles_any=frozenset({"service-executor"}),
     scopes_all=frozenset({"jobs:write"}),
     kind=PrincipalKind.SERVICE,
     client_ids=frozenset({"automation-service"}),

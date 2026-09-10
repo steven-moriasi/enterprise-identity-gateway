@@ -38,7 +38,7 @@ def test_client_credentials_token_builds_service_principal(
     token = issuer.issue(
         subject="service-account-automation-service",
         client_id="automation-service",
-        roles=("service-executor",),
+        roles=(),
         scopes=("jobs:write",),
         tenant_id="platform",
     )

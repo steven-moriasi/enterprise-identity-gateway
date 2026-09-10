@@ -67,11 +67,11 @@ def test_operation_requires_both_role_and_scope() -> None:
         )
 
 
-def test_service_policy_rejects_user_with_service_role() -> None:
+def test_service_policy_rejects_user_with_service_scope() -> None:
     with pytest.raises(AuthorizationError):
         enforce_policy(
             principal(
-                roles=frozenset({"service-executor"}),
+                roles=frozenset(),
                 scopes=frozenset({"jobs:write"}),
             ),
             SERVICE_JOBS_WRITE,
@@ -84,7 +84,7 @@ def test_service_policy_accepts_trusted_client_credentials() -> None:
             kind=PrincipalKind.SERVICE,
             client_id="automation-service",
             tenant_id="platform",
-            roles=frozenset({"service-executor"}),
+            roles=frozenset(),
             scopes=frozenset({"jobs:write"}),
         ),
         SERVICE_JOBS_WRITE,

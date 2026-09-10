@@ -154,7 +154,7 @@ def test_service_job_requires_client_credentials_identity(
         "/api/service/jobs",
         headers=authorization(
             issuer.issue(
-                roles=("service-executor",),
+                roles=(),
                 scopes=("jobs:write",),
             )
         ),
@@ -165,7 +165,7 @@ def test_service_job_requires_client_credentials_identity(
             issuer.issue(
                 subject="service-account-automation-service",
                 client_id="automation-service",
-                roles=("service-executor",),
+                roles=(),
                 scopes=("jobs:write",),
                 tenant_id="platform",
             )

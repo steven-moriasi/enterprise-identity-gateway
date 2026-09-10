@@ -6,9 +6,9 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-admin-password}
       KC_HEALTH_ENABLED: "true"
-      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME: ${IDENTITY_PUBLIC_KEYCLOAK_URL:-http://localhost:8080}
     ports:
-      - "8080:8080"
+      - "${IDENTITY_KEYCLOAK_PORT:-8080}:8080"
     volumes:
       - ./keycloak/enterprise-realm.json:/opt/keycloak/data/import/enterprise-realm.json:ro
     healthcheck:
@@ -26,7 +26,7 @@ services:
     build: .
     restart: unless-stopped
     environment: &identity-environment
-      IDENTITY_GATEWAY_ISSUER_URL: http://localhost:8080/realms/enterprise
+      IDENTITY_GATEWAY_ISSUER_URL: ${IDENTITY_PUBLIC_KEYCLOAK_URL:-http://localhost:8080}/realms/enterprise
       IDENTITY_GATEWAY_JWKS_URL: http://keycloak:8080/realms/enterprise/protocol/openid-connect/certs
       IDENTITY_GATEWAY_AUDIENCE: identity-gateway
       IDENTITY_GATEWAY_CLIENT_ID: identity-gateway
@@ -36,7 +36,7 @@ services:
       keycloak:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "${IDENTITY_GATEWAY_PORT:-8000}:8000"
 
   protected-service:
     build: .
@@ -75,7 +75,7 @@ services:
     volumes:
       - ./examples/pkce-client:/usr/share/nginx/html:ro
     ports:
-      - "3000:80"
+      - "${IDENTITY_PKCE_PORT:-3000}:80"
     depends_on:
       gateway:
         condition: service_healthy
