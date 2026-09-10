@@ -1,11 +1,11 @@
-FROM python:3.12.11-slim-bookworm AS builder
+FROM python:3.14.7-slim-bookworm AS builder
 
 WORKDIR /build
 COPY pyproject.toml README.md ./
 COPY app ./app
 RUN python -m pip wheel --wheel-dir /wheels .
 
-FROM python:3.12.11-slim-bookworm AS runtime
+FROM python:3.14.7-slim-bookworm AS runtime
 
 RUN groupadd --system app \
     && useradd --system --gid app --home-dir /app app
