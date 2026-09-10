@@ -6,6 +6,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 
+from app.api.logout import router as logout_router
 from app.api.routes import router as identity_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -28,6 +29,7 @@ app.add_middleware(
     expose_headers=["X-Correlation-ID"],
 )
 app.include_router(operations_router)
+app.include_router(logout_router)
 app.include_router(identity_router)
 
 

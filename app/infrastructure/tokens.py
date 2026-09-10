@@ -8,6 +8,7 @@ from app.core.config import Settings
 from app.domain.errors import AuthenticationError, IdentityProviderUnavailableError
 from app.domain.models import Principal, PrincipalKind
 from app.infrastructure.jwks import JwksCache
+from app.infrastructure.revocation import RevocationRegistry
 
 
 class TokenHeader(BaseModel):
@@ -44,6 +45,7 @@ class TokenClaims(BaseModel):
     preferred_username: str | None = None
     scope: str = ""
     tenant_id: str | None = None
+    sid: str | None = None
     realm_access: RealmAccess = Field(default_factory=RealmAccess)
     resource_access: dict[str, ClientAccess] = Field(default_factory=dict)
 
@@ -53,11 +55,13 @@ class TokenValidator:
         self,
         settings: Settings,
         jwks: JwksCache,
+        revocations: RevocationRegistry | None = None,
         *,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self._settings = settings
         self._jwks = jwks
+        self._revocations = revocations
         self._now = now
 
     def validate(self, token: str) -> Principal:
@@ -72,6 +76,11 @@ class TokenValidator:
             raise AuthenticationError("Only access tokens are accepted")
         if self._now().timestamp() - claims.iat > self._settings.max_access_token_age_seconds:
             raise AuthenticationError("Access token is older than the configured limit")
+        if self._revocations is not None and self._revocations.is_revoked(
+            session_id=claims.sid,
+            subject=claims.sub,
+        ):
+            raise AuthenticationError("Access token session is revoked")
         return self._principal(claims)
 
     @staticmethod
@@ -117,4 +126,5 @@ class TokenValidator:
             roles=frozenset(roles),
             scopes=frozenset(claims.scope.split()),
             token_id=claims.jti,
+            session_id=claims.sid,
         )

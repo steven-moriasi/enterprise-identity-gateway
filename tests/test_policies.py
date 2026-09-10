@@ -27,6 +27,7 @@ def principal(
         roles=roles,
         scopes=scopes,
         token_id=None,
+        session_id="session-123",
     )
 
 

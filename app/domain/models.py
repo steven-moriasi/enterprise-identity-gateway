@@ -17,6 +17,7 @@ class Principal:
     roles: frozenset[str]
     scopes: frozenset[str]
     token_id: str | None
+    session_id: str | None
 
     def has_any_role(self, required: frozenset[str]) -> bool:
         return not required.isdisjoint(self.roles)

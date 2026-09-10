@@ -10,6 +10,8 @@ from app.core.metrics import AUTHENTICATIONS
 from app.domain.errors import AuthenticationError, IdentityProviderUnavailableError
 from app.domain.models import Principal
 from app.infrastructure.jwks import JwksCache
+from app.infrastructure.logout_tokens import LogoutTokenValidator
+from app.infrastructure.revocation import RevocationRegistry
 from app.infrastructure.tokens import TokenValidator
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -32,11 +34,30 @@ def get_jwks_cache() -> JwksCache:
     )
 
 
+@lru_cache
+def get_revocation_registry() -> RevocationRegistry:
+    settings = get_settings()
+    return RevocationRegistry(
+        retention_seconds=settings.max_access_token_age_seconds,
+    )
+
+
 def get_token_validator(
     settings: Annotated[Settings, Depends(get_settings)],
     jwks: Annotated[JwksCache, Depends(get_jwks_cache)],
+    revocations: Annotated[
+        RevocationRegistry,
+        Depends(get_revocation_registry),
+    ],
 ) -> TokenValidator:
-    return TokenValidator(settings, jwks)
+    return TokenValidator(settings, jwks, revocations)
+
+
+def get_logout_token_validator(
+    settings: Annotated[Settings, Depends(get_settings)],
+    jwks: Annotated[JwksCache, Depends(get_jwks_cache)],
+) -> LogoutTokenValidator:
+    return LogoutTokenValidator(settings, jwks)
 
 
 def authenticate(

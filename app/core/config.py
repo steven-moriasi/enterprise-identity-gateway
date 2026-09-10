@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = Field(default=5, ge=0.1, le=30)
     service_client_ids: frozenset[str] = frozenset({"automation-service"})
     allowed_origins: list[str] = ["http://localhost:3000"]
+    backchannel_logout_audience: str = "command-center"
+    backchannel_logout_max_age_seconds: int = Field(default=120, ge=30, le=600)
 
 
 @lru_cache

@@ -39,11 +39,10 @@ def issuer(signing_key: rsa.RSAPrivateKey, now: datetime) -> TokenIssuer:
 
 
 @pytest.fixture
-def validator(
+def jwks(
     settings: Settings,
     signing_key: rsa.RSAPrivateKey,
-    now: datetime,
-) -> Iterator[TokenValidator]:
+) -> Iterator[JwksCache]:
     def handler(request: httpx.Request) -> httpx.Response:
         assert str(request.url) == settings.jwks_url
         return httpx.Response(
@@ -52,12 +51,21 @@ def validator(
         )
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
-    cache = JwksCache(
+    jwks = JwksCache(
         url=settings.jwks_url,
         cache_seconds=settings.jwks_cache_seconds,
         unknown_kid_refresh_seconds=settings.unknown_kid_refresh_seconds,
         timeout_seconds=settings.request_timeout_seconds,
         client=client,
     )
-    yield TokenValidator(settings, cache, now=lambda: now)
-    cache.close()
+    yield jwks
+    jwks.close()
+
+
+@pytest.fixture
+def validator(
+    settings: Settings,
+    jwks: JwksCache,
+    now: datetime,
+) -> TokenValidator:
+    return TokenValidator(settings, jwks, now=lambda: now)

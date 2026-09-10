@@ -1,14 +1,23 @@
 from collections.abc import Iterator
+from datetime import datetime
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from app.infrastructure.auth import get_token_validator
+from app.core.config import Settings
+from app.infrastructure.auth import (
+    get_logout_token_validator,
+    get_revocation_registry,
+    get_token_validator,
+)
+from app.infrastructure.jwks import JwksCache
+from app.infrastructure.logout_tokens import LogoutTokenValidator
 from app.infrastructure.protected_client import (
     ProtectedServiceClient,
     get_protected_service_client,
 )
+from app.infrastructure.revocation import RevocationRegistry
 from app.infrastructure.tokens import TokenValidator
 from app.main import app
 from tests.support import TokenIssuer
@@ -166,3 +175,49 @@ def test_service_job_requires_client_credentials_identity(
     assert user_response.status_code == 403
     assert service_response.status_code == 200
     assert service_response.json()["action"] == "service_job.accepted"
+
+
+def test_backchannel_logout_revokes_active_session(
+    settings: Settings,
+    jwks: JwksCache,
+    issuer: TokenIssuer,
+    now: datetime,
+) -> None:
+    revocations = RevocationRegistry(retention_seconds=900)
+    access_validator = TokenValidator(
+        settings,
+        jwks,
+        revocations,
+        now=lambda: now,
+    )
+    logout_validator = LogoutTokenValidator(
+        settings,
+        jwks,
+        now=lambda: now,
+    )
+
+    def override_access_validator() -> TokenValidator:
+        return access_validator
+
+    def override_logout_validator() -> LogoutTokenValidator:
+        return logout_validator
+
+    def override_revocations() -> RevocationRegistry:
+        return revocations
+
+    app.dependency_overrides[get_token_validator] = override_access_validator
+    app.dependency_overrides[get_logout_token_validator] = override_logout_validator
+    app.dependency_overrides[get_revocation_registry] = override_revocations
+    token = issuer.issue()
+    with TestClient(app) as test_client:
+        before = test_client.get("/api/me", headers=authorization(token))
+        logout = test_client.post(
+            "/oidc/backchannel-logout",
+            data={"logout_token": issuer.issue_logout()},
+        )
+        after = test_client.get("/api/me", headers=authorization(token))
+    app.dependency_overrides.clear()
+
+    assert before.status_code == 200
+    assert logout.status_code == 200
+    assert after.status_code == 401

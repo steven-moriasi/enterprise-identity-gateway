@@ -119,7 +119,10 @@
         "http://localhost:3000"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "backchannel.logout.url": "http://gateway:8000/oidc/backchannel-logout",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false"
       },
       "defaultClientScopes": [
         "web-origins",

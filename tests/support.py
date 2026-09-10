@@ -4,6 +4,8 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+from app.infrastructure.logout_tokens import BACKCHANNEL_LOGOUT_EVENT
+
 
 def base64url_uint(value: int) -> str:
     length = (value.bit_length() + 7) // 8
@@ -61,6 +63,7 @@ class TokenIssuer:
             "jti": "token-123",
             "typ": credential_kind,
             "azp": client_id,
+            "sid": "session-123",
             "preferred_username": subject,
             "scope": " ".join(scopes),
             "realm_access": {"roles": list(roles)},
@@ -75,4 +78,34 @@ class TokenIssuer:
             key or self.key,
             algorithm="RS256",
             headers={"kid": kid or self.kid, "typ": "JWT"},
+        )
+
+    def issue_logout(
+        self,
+        *,
+        audience: str = "command-center",
+        subject: str | None = None,
+        session_id: str | None = "session-123",
+        issued_delta: timedelta = timedelta(),
+        include_event: bool = True,
+        nonce: str | None = None,
+    ) -> str:
+        claims: dict[str, object] = {
+            "iss": "https://identity.example.test/realms/enterprise",
+            "aud": audience,
+            "iat": int((self.now + issued_delta).timestamp()),
+            "jti": "logout-123",
+            "events": {BACKCHANNEL_LOGOUT_EVENT: {}} if include_event else {},
+        }
+        if subject is not None:
+            claims["sub"] = subject
+        if session_id is not None:
+            claims["sid"] = session_id
+        if nonce is not None:
+            claims["nonce"] = nonce
+        return jwt.encode(
+            claims,
+            self.key,
+            algorithm="RS256",
+            headers={"kid": self.kid, "typ": "logout+jwt"},
         )
