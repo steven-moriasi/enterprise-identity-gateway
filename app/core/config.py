@@ -21,8 +21,12 @@ class Settings(BaseSettings):
     upstream_url: str = "http://localhost:8001"
     internal_shared_secret: SecretStr = SecretStr("local-internal-secret")
     jwks_cache_seconds: int = Field(default=300, ge=5, le=86400)
+    unknown_kid_refresh_seconds: int = Field(default=30, ge=1, le=3600)
     allowed_clock_skew_seconds: int = Field(default=30, ge=0, le=300)
+    max_access_token_age_seconds: int = Field(default=900, ge=60, le=86400)
+    max_token_bytes: int = Field(default=16384, ge=1024, le=65536)
     request_timeout_seconds: float = Field(default=5, ge=0.1, le=30)
+    service_client_ids: frozenset[str] = frozenset({"automation-service"})
 
 
 @lru_cache
