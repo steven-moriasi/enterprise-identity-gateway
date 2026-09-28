@@ -126,6 +126,16 @@ logout.
 - [Threat Model](docs/THREAT_MODEL.md)
 - [SAML Federation Note](docs/SAML_FEDERATION.md)
 - [Operations Runbook](docs/OPERATIONS.md)
-- [Portfolio Evidence](docs/PORTFOLIO_EVIDENCE.md)
-- [Principal Engineer Review](docs/PRINCIPAL_ENGINEER_REVIEW.md)
 - [Roadmap](docs/ROADMAP.md)
+
+## Limits
+
+- The repository does not establish production availability, latency, scale, recovery objectives,
+  or breach resistance.
+- It does not cover every OAuth, OIDC, Keycloak, browser, XML, or federation threat.
+- It does not establish multi-replica logout consistency or a production secret, key, certificate,
+  and realm lifecycle.
+- It does not implement SAML interoperability or establish penetration testing, formal assurance,
+  or compliance certification.
+- It makes no claim about historical production deployment, cost savings, adoption, or business
+  outcomes.

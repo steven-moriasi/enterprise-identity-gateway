@@ -9,7 +9,7 @@ description = "OIDC authorization gateway reference implementation"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 license = { text = "MIT" }
-authors = [{ name = "Steven Ongati", email = "ongatisteven@gmail.com" }]
+authors = [{ name = "Steven Moriasi", email = "moriasisteven@gmail.com" }]
 dependencies = [
   "cryptography==50.0.1",
   "fastapi==0.141.1",
